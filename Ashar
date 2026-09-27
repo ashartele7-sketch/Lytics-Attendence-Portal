@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYTICS - Attendance & User Management Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#172554'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200 selection:bg-brand-500 selection:text-white">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full"></div>
+
+    <!-- TOP NAVIGATION HEADER -->
+    <header class="bg-brand-900 dark:bg-slate-900 text-white border-b border-brand-800 dark:border-slate-800 sticky top-0 z-30 shadow-lg transition-colors">
+        <div class="px-4 sm:px-6 py-3 flex items-center justify-between">
+            
+            <!-- BRANDING & LOGO -->
+            <div class="flex items-center space-x-3 cursor-pointer select-none" onclick="app.navigate('dashboard')">
+                <div class="flex items-center space-x-2">
+                    <svg class="h-10 sm:h-11 w-auto drop-shadow-md overflow-visible" viewBox="-10 -35 130 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="25" y="15" width="80" height="28" rx="14" transform="rotate(-30 25 15)" fill="url(#purple_grad)" />
+                        <rect x="15" y="50" width="80" height="28" rx="14" transform="rotate(-30 15 50)" fill="url(#blue_grad)" />
+                        <rect x="5" y="85" width="80" height="28" rx="14" transform="rotate(-30 5 85)" fill="url(#teal_grad)" />
+                        <defs>
+                            <linearGradient id="purple_grad" x1="25" y1="15" x2="105" y2="43" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#a855f7" />
+                                <stop offset="1" stop-color="#7c3aed" />
+                            </linearGradient>
+                            <linearGradient id="blue_grad" x1="15" y1="50" x2="95" y2="78" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3b82f6" />
+                                <stop offset="1" stop-color="#1d4ed8" />
+                            </linearGradient>
+                            <linearGradient id="teal_grad" x1="5" y1="85" x2="85" y2="113" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#06b6d4" />
+                                <stop offset="1" stop-color="#0d9488" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black tracking-tight text-white font-sans lowercase leading-none">lytics</span>
+                        <span class="text-[10px] font-semibold text-brand-200 tracking-wider uppercase mt-1">lytics-portal.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT CONTROLS: LIVE CLOCK & USER PROFILE MENU -->
+            <div class="flex items-center space-x-3 sm:space-x-5">
+                
+                <div class="hidden md:flex flex-col text-right pr-4 border-r border-brand-800 dark:border-slate-800">
+                    <span id="headerLiveTime" class="text-sm font-bold tracking-wider font-mono text-brand-100">00:00:00 AM</span>
+                    <span id="headerLiveDate" class="text-[11px] text-brand-200 font-medium">Loading date...</span>
+                </div>
+
+                <!-- USER PROFILE DROPDOWN -->
+                <div class="relative">
+                    <button onclick="app.toggleUserMenu()" class="flex items-center space-x-3 bg-brand-950/60 dark:bg-slate-800/80 hover:bg-brand-950 dark:hover:bg-slate-800 px-3 py-1.5 rounded-xl border border-brand-700/50 dark:border-slate-700 transition-all focus:outline-none">
+                        <div id="userAvatar" class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-black text-sm shadow">
+                            A
+                        </div>
+                        <div class="text-left hidden sm:block">
+                            <div id="headerUserName" class="text-xs font-bold text-white leading-tight">Ashar</div>
+                            <div id="headerUserRole" class="text-[10px] text-brand-200 dark:text-slate-400 font-medium leading-tight">Administrator</div>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-brand-300 dark:text-slate-400 text-xs ml-1"></i>
+                    </button>
+
+                    <!-- DROPDOWN MENU -->
+                    <div id="userDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 text-slate-700 dark:text-slate-200 transform transition-all">
+                        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                            <p class="text-[11px] text-slate-400 font-medium">Logged in via lytics-portal.com</p>
+                            <p id="dropdownUserEmail" class="text-xs font-bold text-slate-800 dark:text-white truncate">ashar@lytics-portal.com</p>
+                            <div id="dropdownShiftBadge" class="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                                Morning Shift
+                            </div>
+                        </div>
+
+                        <div class="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer text-xs" onclick="app.toggleDarkMode()">
+                            <span class="flex items-center space-x-2 font-medium">
+                                <i class="fa-solid fa-moon text-indigo-500 dark:text-amber-400 w-4 text-center"></i>
+                                <span>Dark Appearance</span>
+                            </span>
+                            <div id="darkModeSwitch" class="w-8 h-4 bg-slate-300 dark:bg-brand-600 rounded-full relative transition-colors">
+                                <div id="darkModeDot" class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform dark:translate-x-4"></div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+
+                        <button onclick="app.openLoginOverlay()" class="w-full text-left px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center space-x-2">
+                            <i class="fa-solid fa-users-between-lines text-blue-500 w-4 text-center"></i>
+                            <span>Switch Account / Sign In</span>
+                        </button>
+
+                        <button onclick="app.logout()" class="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center space-x-2">
+                            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i>
+                            <span>Sign Out</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE LAYOUT -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-20 shrink-0 transition-colors hidden md:flex">
+            <div class="p-4 flex-1 space-y-6">
+                
+                <!-- PORTAL MENU -->
+                <div>
+                    <div class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Portal Navigation</div>
+                    <nav class="space-y-1">
+                        <button onclick="app.navigate('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-brand-700 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50">
+                            <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i>
+                            <span>Dashboard</span>
+                        </button>
+
+                        <button onclick="app.navigate('punch')" id="nav-punch" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all">
+                            <i class="fa-solid fa-fingerprint w-5 text-center text-sm text-emerald-500"></i>
+                            <span>Check-in Terminal</span>
+                        </button>
+
+                        <button onclick="app.navigate('logs')" id="nav-logs" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all">
+                            <i class="fa-solid fa-clock-rotate-left w-5 text-center text-sm text-indigo-500"></i>
+                            <span id="navLogsLabel">Attendance Logs</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- ADMIN ONLY SECTION -->
+                <div id="adminNavSection">
+                    <div class="px-3 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Administration</div>
+                    <nav class="space-y-1">
+                        <button onclick="app.navigate('users')" id="nav-users" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all">
+                            <i class="fa-solid fa-users-gear w-5 text-center text-sm text-brand-600"></i>
+                            <span>User Management</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- SHIFT SCHEDULE CARD -->
+                <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs space-y-2">
+                    <div class="flex items-center justify-between font-bold text-slate-800 dark:text-slate-200">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-business-time text-brand-500"></i>
+                            <span>Shift Schedule</span>
+                        </span>
+                        <span id="shiftCardAdminHint" class="text-[9px] text-brand-600 dark:text-brand-400 font-semibold">Click to Filter</span>
+                    </div>
+                    <div class="space-y-1.5 text-[11px]">
+                        <div id="sidebarMorningCard" onclick="app.filterByShiftCard('Morning')" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex justify-between items-center transition-all cursor-pointer hover:border-brand-300">
+                            <div>
+                                <div class="font-bold text-slate-700 dark:text-slate-300">Morning Shift</div>
+                                <div class="text-[10px] text-slate-400">08:00 AM - 04:00 PM</div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        </div>
+                        <div id="sidebarEveningCard" onclick="app.filterByShiftCard('Evening')" class="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex justify-between items-center transition-all cursor-pointer hover:border-brand-300">
+                            <div>
+                                <div class="font-bold text-slate-700 dark:text-slate-300">Evening Shift</div>
+                                <div class="text-[10px] text-slate-400">04:00 PM - 12:00 AM</div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span class="flex items-center space-x-1.5 font-medium">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>lytics-portal.com</span>
+                    </span>
+                    <button onclick="app.resetDemoData()" title="Reset demo data" class="hover:text-rose-600 transition-colors text-[11px] font-semibold">
+                        <i class="fa-solid fa-arrows-rotate mr-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+
+            <!-- MOBILE NAV -->
+            <div class="md:hidden flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 -mx-4 -mt-4 mb-4 p-2 justify-around">
+                <button onclick="app.navigate('dashboard')" class="text-xs font-bold p-2 text-brand-600 flex flex-col items-center">
+                    <i class="fa-solid fa-chart-pie text-base"></i>
+                    <span class="text-[10px]">Dashboard</span>
+                </button>
+                <button onclick="app.navigate('punch')" class="text-xs font-bold p-2 text-slate-600 dark:text-slate-300 flex flex-col items-center">
+                    <i class="fa-solid fa-fingerprint text-base text-emerald-500"></i>
+                    <span class="text-[10px]">Check-in</span>
+                </button>
+                <button onclick="app.navigate('logs')" class="text-xs font-bold p-2 text-slate-600 dark:text-slate-300 flex flex-col items-center">
+                    <i class="fa-solid fa-clock-rotate-left text-base text-indigo-500"></i>
+                    <span class="text-[10px]">Logs</span>
+                </button>
+                <button onclick="app.navigate('users')" id="mobileNavUsers" class="text-xs font-bold p-2 text-slate-600 dark:text-slate-300 flex flex-col items-center">
+                    <i class="fa-solid fa-users-gear text-base text-brand-500"></i>
+                    <span class="text-[10px]">Users</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: DASHBOARD OVERVIEW -->
+            <section id="tab-dashboard" class="tab-view space-y-6">
+                
+                <!-- WELCOME BANNER -->
+                <div class="relative overflow-hidden bg-gradient-to-r from-brand-900 via-brand-800 to-indigo-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl">
+                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="inline-flex items-center space-x-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold text-brand-200 mb-3">
+                                <i id="dashRoleIcon" class="fa-solid fa-shield-halved text-amber-400"></i>
+                                <span id="dashRoleTag">Administrator Workspace</span>
+                            </div>
+                            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                                Welcome, <span id="dashWelcomeName" class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-100">Ashar</span>!
+                            </h1>
+                            <p id="dashBannerText" class="text-xs sm:text-sm text-brand-100/80 max-w-xl mt-1">
+                                Monitor staff attendance, manage shift allocations, and oversee check-in operations on lytics-portal.com.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="app.navigate('punch')" class="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-950/40 transition-all flex items-center space-x-2 transform hover:-translate-y-0.5">
+                                <i class="fa-solid fa-fingerprint text-base"></i>
+                                <span>Go to Check-in Terminal</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- METRICS GRID -->
+                <div id="metricsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Dynamic rendering for Admin vs Employee -->
+                </div>
+
+                <!-- ANALYTICS & CALENDAR DUAL GRID -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- LEFT SIDE: COMPACT TIMING GRAPH (5 COLS) -->
+                    <div class="lg:col-span-5 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-6 transition-colors flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-brand-50 dark:bg-brand-950/80 border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-300 text-[10px] font-bold uppercase tracking-wider">
+                                    <i class="fa-solid fa-chart-column"></i>
+                                    <span>Arrival Trend</span>
+                                </div>
+                                <span id="graphFilterLabel" class="text-[10px] font-semibold text-slate-400">All Records</span>
+                            </div>
+                            <h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-3">Check-in Punctuality</h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Arrival frequency across active slots</p>
+                        </div>
+
+                        <!-- COMPACT BAR GRAPH CONTAINER -->
+                        <div class="pt-2 pb-1">
+                            <div id="chartBarsContainer" class="grid grid-cols-7 gap-1.5 sm:gap-2 items-end h-40 pt-6 pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <div class="grid grid-cols-7 gap-1.5 sm:gap-2 pt-2 text-center text-[9px] font-mono font-bold text-slate-400">
+                                <div>07AM</div>
+                                <div>08AM</div>
+                                <div>09AM</div>
+                                <div>10AM</div>
+                                <div>11AM</div>
+                                <div>12PM</div>
+                                <div>04PM</div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+                            <span>Peak Arrival Window</span>
+                            <span class="font-bold text-brand-600 dark:text-brand-400">08:00 AM - 09:00 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT SIDE: LUXURY MONTHLY ATTENDANCE CALENDAR (7 COLS) -->
+                    <div class="lg:col-span-7 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-4 transition-colors flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wider">
+                                    <i class="fa-solid fa-calendar-days"></i>
+                                    <span>Monthly Status Calendar</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <button onclick="app.changeCalendarMonth(-1)" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs text-slate-600 dark:text-slate-300 transition-colors">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </button>
+                                    <span id="calendarMonthTitle" class="text-xs font-extrabold text-slate-800 dark:text-white px-2">Month Year</span>
+                                    <button onclick="app.changeCalendarMonth(1)" class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center text-xs text-slate-600 dark:text-slate-300 transition-colors">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CALENDAR GRID -->
+                        <div class="space-y-2">
+                            <!-- Weekdays Header -->
+                            <div class="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 uppercase">
+                                <div>Mon</div>
+                                <div>Tue</div>
+                                <div>Wed</div>
+                                <div>Thu</div>
+                                <div>Fri</div>
+                                <div>Sat</div>
+                                <div>Sun</div>
+                            </div>
+                            <!-- Days Grid -->
+                            <div id="luxuryCalendarDays" class="grid grid-cols-7 gap-1.5 text-xs">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- COLOR LEGEND -->
+                        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 gap-2">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-blue-600 shadow-sm"></span>
+                                <span class="font-medium">Present / Checked In (Blue)</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-rose-600 shadow-sm"></span>
+                                <span class="font-medium">Off / Absent (Red)</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <span class="w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-800"></span>
+                                <span class="font-medium">Upcoming / Unlogged</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RECENT ACTIVITY FEED -->
+                <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 id="dashActivityTitle" class="text-base font-bold text-slate-800 dark:text-white">Recent Attendance Activity</h3>
+                            <p id="dashActivitySub" class="text-xs text-slate-400">Live timeline of check-in events</p>
+                        </div>
+                        <button onclick="app.navigate('logs')" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                            View All Logs <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+
+                    <div id="dashActivityContainer" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- TAB 2: CHECK-IN / CHECK-OUT TERMINAL -->
+            <section id="tab-punch" class="tab-view hidden space-y-6">
+                
+                <div class="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200/80 dark:border-slate-800 shadow-xl space-y-8">
+                    
+                    <div class="text-center space-y-2">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold">
+                            <i class="fa-solid fa-user text-brand-500"></i>
+                            <span id="punchUserHeading">Ashar (Administrator)</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 dark:text-white">Attendance Check-in Terminal</h2>
+                        <div class="flex items-center justify-center space-x-2 text-xs">
+                            <span class="text-slate-400">Assigned Shift:</span>
+                            <span id="punchShiftBadge" class="font-extrabold px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                Morning Shift
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-b from-slate-900 to-slate-950 text-white rounded-3xl p-8 text-center border border-slate-800 shadow-inner relative overflow-hidden">
+                        <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Real-Time System Clock</div>
+                        <div id="punchBigClock" class="text-4xl sm:text-6xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                            00:00:00 AM
+                        </div>
+                        <div id="punchBigDate" class="text-xs text-brand-300 font-semibold mt-2">
+                            Date Loading...
+                        </div>
+
+                        <div class="mt-6 pt-6 border-t border-slate-800/80 flex items-center justify-center space-x-3">
+                            <div id="punchStatusIndicator" class="flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300">
+                                <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                                <span>Not Checked In Today</span>
+                            </div>
+                            <div id="punchTimerDisplay" class="hidden font-mono text-xs text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-3 py-1 rounded-full">
+                                Elapsed: 00h 00m 00s
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                            Check-in Note / Work Location (Optional)
+                        </label>
+                        <input type="text" id="punchNoteInput" placeholder="e.g. Office Desk, Remote Work, Field Visit..." 
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none transition-all">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button onclick="app.performPunch('in')" id="btnPunchIn" 
+                            class="py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/20 transition-all flex items-center justify-center space-x-3 group transform hover:-translate-y-0.5 cursor-pointer">
+                            <div class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <i class="fa-solid fa-right-to-bracket text-base"></i>
+                            </div>
+                            <span>CHECK IN</span>
+                        </button>
+
+                        <button onclick="app.performPunch('out')" id="btnPunchOut" 
+                            class="py-4 px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-extrabold text-sm cursor-not-allowed transition-all flex items-center justify-center space-x-3 group" disabled>
+                            <div class="w-8 h-8 rounded-xl bg-slate-300 dark:bg-slate-700 flex items-center justify-center">
+                                <i class="fa-solid fa-right-from-bracket text-base"></i>
+                            </div>
+                            <span>CHECK OUT</span>
+                        </button>
+                    </div>
+
+                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Your Personal Check-in History</h4>
+                        <div id="personalPunchHistory" class="space-y-2 text-xs">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- TAB 3: ATTENDANCE LOGS -->
+            <section id="tab-logs" class="tab-view hidden space-y-6">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 id="logsHeadingTitle" class="text-xl font-bold text-slate-800 dark:text-white">Attendance Logs</h2>
+                        <p id="logsHeadingSub" class="text-xs text-slate-400">View check-in records and calculated work hours</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="app.exportLogsToCSV()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Export to CSV</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FILTERS BAR -->
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div id="logSearchBox">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Search Record</label>
+                        <input type="text" id="logSearchInput" oninput="app.renderLogsTable()" placeholder="Name or Date..." 
+                            class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Filter Shift</label>
+                        <select id="logShiftFilter" onchange="app.renderLogsTable()" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                            <option value="ALL">All Shifts</option>
+                            <option value="Morning">Morning Shift (8AM - 4PM)</option>
+                            <option value="Evening">Evening Shift (4PM - 12AM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Filter Status</label>
+                        <select id="logStatusFilter" onchange="app.renderLogsTable()" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Checked In">Checked In</option>
+                            <option value="Completed">Completed Shift</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- LOGS TABLE -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 font-bold uppercase text-[10px] tracking-wider">
+                                    <th class="p-4">Date</th>
+                                    <th class="p-4">Employee</th>
+                                    <th class="p-4">Shift</th>
+                                    <th class="p-4">Check In</th>
+                                    <th class="p-4">Check Out</th>
+                                    <th class="p-4">Hours Worked</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Note</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- TAB 4: MANAGE EMPLOYEES (ADMIN ONLY) -->
+            <section id="tab-users" class="tab-view hidden space-y-6">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-white">Employee Accounts & Shift Assignments</h2>
+                        <p class="text-xs text-slate-400">Create login credentials, edit shifts, and grant access to staff</p>
+                    </div>
+                    <button onclick="app.openUserModal()" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Add New Employee</span>
+                    </button>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 font-bold uppercase text-[10px] tracking-wider">
+                                    <th class="p-4">User</th>
+                                    <th class="p-4">Email / Login ID</th>
+                                    <th class="p-4">Password</th>
+                                    <th class="p-4">Assigned Shift</th>
+                                    <th class="p-4">Role</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- MODAL 1: ADD / EDIT USER MODAL -->
+    <div id="userModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 id="userModalTitle" class="text-lg font-bold text-slate-800 dark:text-white">Add New Employee</h3>
+                    <p class="text-xs text-slate-400">Set up login credentials and shift timing</p>
+                </div>
+                <button onclick="app.closeUserModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="userForm" onsubmit="app.saveUserForm(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="formUserId">
+                
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+                    <input type="text" id="formName" required placeholder="e.g. Ali Ahmed" 
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email / Portal Username</label>
+                    <input type="email" id="formEmail" required placeholder="e.g. ali@lytics-portal.com" 
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="text" id="formPassword" required placeholder="e.g. pass123" 
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-mono text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Shift Assignment</label>
+                        <select id="formShift" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            <option value="Morning">Morning (8AM - 4PM)</option>
+                            <option value="Evening">Evening (4PM - 12AM)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">System Role</label>
+                        <select id="formRole" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            <option value="Employee">Employee</option>
+                            <option value="Administrator">Administrator</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Account Status</label>
+                    <select id="formStatus" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-3">
+                    <button type="button" onclick="app.closeUserModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow-lg">
+                        Save User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: CONFIRMATION MODAL -->
+    <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 id="confirmTitle" class="text-base font-bold text-slate-800 dark:text-white">Are you sure?</h3>
+                <p id="confirmMessage" class="text-xs text-slate-400 mt-1">This action cannot be undone.</p>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button id="confirmCancelBtn" class="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-xs">Cancel</button>
+                <button id="confirmOkBtn" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: LOGIN OVERLAY -->
+    <div id="loginOverlay" class="fixed inset-0 z-50 bg-brand-950/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 space-y-6">
+            
+            <div class="text-center space-y-3">
+                <div class="inline-flex items-center space-x-3 bg-slate-100 dark:bg-slate-800/80 px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner">
+                    <svg class="h-11 sm:h-12 w-auto drop-shadow-md overflow-visible" viewBox="-10 -35 130 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="25" y="15" width="80" height="28" rx="14" transform="rotate(-30 25 15)" fill="url(#purple_grad_login)" />
+                        <rect x="15" y="50" width="80" height="28" rx="14" transform="rotate(-30 15 50)" fill="url(#blue_grad_login)" />
+                        <rect x="5" y="85" width="80" height="28" rx="14" transform="rotate(-30 5 85)" fill="url(#teal_grad_login)" />
+                        <defs>
+                            <linearGradient id="purple_grad_login" x1="25" y1="15" x2="105" y2="43" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#a855f7" />
+                                <stop offset="1" stop-color="#7c3aed" />
+                            </linearGradient>
+                            <linearGradient id="blue_grad_login" x1="15" y1="50" x2="95" y2="78" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#3b82f6" />
+                                <stop offset="1" stop-color="#1d4ed8" />
+                            </linearGradient>
+                            <linearGradient id="teal_grad_login" x1="5" y1="85" x2="85" y2="113" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#06b6d4" />
+                                <stop offset="1" stop-color="#0d9488" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="text-3xl font-black tracking-tight font-sans lowercase text-slate-900 dark:text-white">lytics</span>
+                </div>
+                <p class="text-xs text-slate-400 font-medium">Sign in to access lytics-portal.com</p>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form onsubmit="app.handleLogin(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Email / Portal Username</label>
+                    <input type="email" id="loginEmail" required placeholder="ashar@lytics-portal.com" value="ashar@lytics-portal.com"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" value="admin123"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <button type="submit" class="w-full py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm shadow-xl shadow-brand-950/40 transition-all cursor-pointer">
+                    Sign In to Portal
+                </button>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        const DEFAULT_USERS = [
+            { id: "USR-101", name: "Ashar", email: "ashar@lytics-portal.com", password: "admin123", role: "Administrator", shift: "Morning", status: "Active" },
+            { id: "USR-102", name: "Ali Ahmed", email: "ali@lytics-portal.com", password: "emp123", role: "Employee", shift: "Morning", status: "Active" },
+            { id: "USR-103", name: "Sara Khan", email: "sara@lytics-portal.com", password: "emp123", role: "Employee", shift: "Evening", status: "Active" },
+            { id: "USR-104", name: "Hassan Raza", email: "hassan@lytics-portal.com", password: "emp123", role: "Employee", shift: "Morning", status: "Active" }
+        ];
+
+        const DEFAULT_LOGS = [
+            {
+                id: "LOG-501",
+                userId: "USR-102",
+                userName: "Ali Ahmed",
+                userShift: "Morning",
+                date: new Date().toISOString().split('T')[0],
+                checkIn: "08:00 AM",
+                checkOut: "04:02 PM",
+                hoursWorked: "8h 02m",
+                status: "Completed",
+                note: "Office Desk"
+            },
+            {
+                id: "LOG-502",
+                userId: "USR-103",
+                userName: "Sara Khan",
+                userShift: "Evening",
+                date: new Date().toISOString().split('T')[0],
+                checkIn: "09:00 AM",
+                checkOut: "-",
+                hoursWorked: "In Progress",
+                status: "Checked In",
+                note: "Evening Shift Desk"
+            }
+        ];
+
+        class LyticsPortal {
+            constructor() {
+                try {
+                    const savedUsers = localStorage.getItem('lytics_users');
+                    this.users = savedUsers ? JSON.parse(savedUsers) : DEFAULT_USERS;
+                } catch (e) {
+                    this.users = DEFAULT_USERS;
+                }
+
+                // Ensure ashar@lytics-portal.com always exists with admin rights
+                const adminExists = this.users.find(u => u.email.toLowerCase() === 'ashar@lytics-portal.com');
+                if (!adminExists) {
+                    this.users.unshift({ id: "USR-101", name: "Ashar", email: "ashar@lytics-portal.com", password: "admin123", role: "Administrator", shift: "Morning", status: "Active" });
+                }
+
+                try {
+                    const savedLogs = localStorage.getItem('lytics_logs');
+                    this.logs = savedLogs ? JSON.parse(savedLogs) : DEFAULT_LOGS;
+                } catch (e) {
+                    this.logs = DEFAULT_LOGS;
+                }
+
+                try {
+                    const savedUser = localStorage.getItem('lytics_current_user');
+                    this.currentUser = savedUser ? JSON.parse(savedUser) : null;
+                } catch (e) {
+                    this.currentUser = null;
+                }
+
+                this.theme = localStorage.getItem('lytics_theme') || 'light';
+                this.currentTab = 'dashboard';
+                
+                const now = new Date();
+                this.calYear = now.getFullYear();
+                this.calMonth = now.getMonth();
+
+                this.init();
+            }
+
+            init() {
+                this.applyTheme();
+                this.startClock();
+                
+                if (this.currentUser) {
+                    const freshUser = this.users.find(u => u.id === this.currentUser.id || u.email.toLowerCase() === this.currentUser.email.toLowerCase());
+                    if (freshUser) {
+                        this.currentUser = freshUser;
+                        this.hideLoginOverlay();
+                        this.updateUserUI();
+                        this.renderAllViews();
+                    } else {
+                        this.openLoginOverlay();
+                    }
+                } else {
+                    this.openLoginOverlay();
+                }
+
+                window.addEventListener('click', (e) => {
+                    if (!e.target.closest('#userDropdown') && !e.target.closest('button[onclick="app.toggleUserMenu()"]')) {
+                        const dd = document.getElementById('userDropdown');
+                        if (dd) dd.classList.add('hidden');
+                    }
+                });
+            }
+
+            saveData() {
+                try {
+                    localStorage.setItem('lytics_users', JSON.stringify(this.users));
+                    localStorage.setItem('lytics_logs', JSON.stringify(this.logs));
+                    localStorage.setItem('lytics_current_user', JSON.stringify(this.currentUser));
+                    localStorage.setItem('lytics_theme', this.theme);
+                } catch (e) {
+                    console.error("Storage error", e);
+                }
+            }
+
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+
+                const toast = document.createElement('div');
+                toast.className = `pointer-events-auto flex items-center justify-between p-4 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform translate-y-2 opacity-0 ${
+                    type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-rose-600' : 'bg-brand-600'
+                }`;
+                
+                const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
+                
+                toast.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid ${icon} text-base"></i>
+                        <span>${message}</span>
+                    </div>
+                `;
+
+                container.appendChild(toast);
+                setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', '-translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3500);
+            }
+
+            applyTheme() {
+                if (this.theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                }
+            }
+
+            toggleDarkMode() {
+                this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                this.saveData();
+                this.applyTheme();
+                this.showToast(`Switched to ${this.theme} mode`, 'info');
+            }
+
+            startClock() {
+                const update = () => {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                    const headerTime = document.getElementById('headerLiveTime');
+                    const headerDate = document.getElementById('headerLiveDate');
+                    const bigClock = document.getElementById('punchBigClock');
+                    const bigDate = document.getElementById('punchBigDate');
+
+                    if (headerTime) headerTime.innerText = timeStr;
+                    if (headerDate) headerDate.innerText = dateStr;
+                    if (bigClock) bigClock.innerText = timeStr;
+                    if (bigDate) bigDate.innerText = dateStr;
+
+                    this.updatePunchTimer();
+                };
+                update();
+                setInterval(update, 1000);
+            }
+
+            handleLogin(e) {
+                e.preventDefault();
+                const emailInput = document.getElementById('loginEmail');
+                const passInput = document.getElementById('loginPassword');
+                if (!emailInput || !passInput) return;
+
+                const email = emailInput.value.trim().toLowerCase();
+                const pass = passInput.value.trim();
+
+                const found = this.users.find(u => u.email.toLowerCase() === email && u.password === pass);
+
+                if (found) {
+                    if (found.status === 'Inactive') {
+                        this.showToast('Account is currently inactive. Contact Administrator.', 'error');
+                        return;
+                    }
+                    this.currentUser = found;
+                    this.saveData();
+                    this.hideLoginOverlay();
+                    this.updateUserUI();
+                    this.navigate('dashboard');
+                    this.renderAllViews();
+                    this.showToast(`Welcome back, ${found.name}!`);
+                } else {
+                    this.showToast('Invalid email or password! Try ashar@lytics-portal.com / admin123', 'error');
+                }
+            }
+
+            openLoginOverlay() {
+                const overlay = document.getElementById('loginOverlay');
+                const dropdown = document.getElementById('userDropdown');
+                if (overlay) overlay.classList.remove('hidden');
+                if (dropdown) dropdown.classList.add('hidden');
+            }
+
+            hideLoginOverlay() {
+                const overlay = document.getElementById('loginOverlay');
+                if (overlay) overlay.classList.add('hidden');
+            }
+
+            logout() {
+                this.currentUser = null;
+                this.saveData();
+                this.openLoginOverlay();
+                this.showToast('Logged out successfully', 'info');
+            }
+
+            toggleUserMenu() {
+                const dd = document.getElementById('userDropdown');
+                if (dd) dd.classList.toggle('hidden');
+            }
+
+            navigate(tabName) {
+                if (tabName === 'users' && this.currentUser?.role !== 'Administrator') {
+                    this.showToast('Access restricted to Administrators only.', 'error');
+                    return;
+                }
+
+                this.currentTab = tabName;
+                document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+                const activeTab = document.getElementById(`tab-${tabName}`);
+                if (activeTab) activeTab.classList.remove('hidden');
+
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('text-brand-700', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-950/50', 'font-bold');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-400', 'font-semibold');
+                });
+
+                const activeBtn = document.getElementById(`nav-${tabName}`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400', 'font-semibold');
+                    activeBtn.classList.add('text-brand-700', 'dark:text-brand-400', 'bg-brand-50', 'dark:bg-brand-950/50', 'font-bold');
+                }
+            }
+
+            updateUserUI() {
+                if (!this.currentUser) return;
+
+                const isAdmin = this.currentUser.role === 'Administrator';
+
+                document.getElementById('headerUserName').innerText = this.currentUser.name;
+                document.getElementById('headerUserRole').innerText = this.currentUser.role;
+                document.getElementById('userAvatar').innerText = this.currentUser.name.charAt(0).toUpperCase();
+                document.getElementById('dropdownUserEmail').innerText = this.currentUser.email;
+
+                const shiftText = this.currentUser.shift === 'Morning' ? 'Morning Shift (08:00 AM - 04:00 PM)' : 'Evening Shift (04:00 PM - 12:00 AM)';
+                document.getElementById('dropdownShiftBadge').innerText = shiftText;
+
+                document.getElementById('dashWelcomeName').innerText = this.currentUser.name;
+                document.getElementById('dashRoleTag').innerText = isAdmin ? 'Administrator Workspace' : 'Employee Workspace';
+                document.getElementById('dashRoleIcon').className = isAdmin ? 'fa-solid fa-shield-halved text-amber-400' : 'fa-solid fa-user-check text-emerald-400';
+
+                document.getElementById('dashBannerText').innerText = isAdmin 
+                    ? 'Monitor staff attendance, manage shift allocations, and oversee check-in operations on lytics-portal.com.'
+                    : 'Track your personal shift timing, check in/out daily, and review your attendance history.';
+
+                document.getElementById('punchUserHeading').innerText = `${this.currentUser.name} (${this.currentUser.role})`;
+                document.getElementById('punchShiftBadge').innerText = shiftText;
+
+                document.getElementById('navLogsLabel').innerText = isAdmin ? 'Attendance Logs' : 'My Attendance Logs';
+                document.getElementById('logsHeadingTitle').innerText = isAdmin ? 'Shift Attendance Logs' : 'My Personal Attendance Logs';
+                document.getElementById('logsHeadingSub').innerText = isAdmin ? 'View check-in records and calculated hours for all staff' : 'View your personal check-in history and logged shift hours';
+                
+                const searchBox = document.getElementById('logSearchBox');
+                if (searchBox) searchBox.style.display = isAdmin ? 'block' : 'none';
+
+                const adminNav = document.getElementById('adminNavSection');
+                const mobileUsers = document.getElementById('mobileNavUsers');
+                const shiftHint = document.getElementById('shiftCardAdminHint');
+
+                if (isAdmin) {
+                    if (adminNav) adminNav.classList.remove('hidden');
+                    if (mobileUsers) mobileUsers.classList.remove('hidden');
+                    if (shiftHint) shiftHint.classList.remove('hidden');
+                } else {
+                    if (adminNav) adminNav.classList.add('hidden');
+                    if (mobileUsers) mobileUsers.classList.add('hidden');
+                    if (shiftHint) shiftHint.classList.add('hidden');
+                }
+
+                this.refreshPunchTerminalState();
+            }
+
+            filterByShiftCard(shiftName) {
+                if (!this.currentUser || this.currentUser.role !== 'Administrator') return;
+                this.navigate('logs');
+                const shiftFilterEl = document.getElementById('logShiftFilter');
+                if (shiftFilterEl) shiftFilterEl.value = shiftName;
+                this.renderLogsTable();
+                this.showToast(`Filtered logs for ${shiftName} Shift`, 'info');
+            }
+
+            renderAllViews() {
+                this.renderDashboardStats();
+                this.renderTimingChart();
+                this.renderLuxuryCalendar();
+                this.renderActivityFeed();
+                this.renderLogsTable();
+                this.renderUsersTable();
+                this.renderPersonalPunchHistory();
+            }
+
+            renderDashboardStats() {
+                const grid = document.getElementById('metricsGrid');
+                if (!grid || !this.currentUser) return;
+
+                const isAdmin = this.currentUser.role === 'Administrator';
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                if (isAdmin) {
+                    const morning = this.users.filter(u => u.shift === 'Morning').length;
+                    const evening = this.users.filter(u => u.shift === 'Evening').length;
+                    const activeTodayLogs = this.logs.filter(l => l.date === todayStr);
+                    const present = activeTodayLogs.filter(l => l.status === 'Checked In' || l.status === 'Completed').length;
+                    const pct = this.users.length ? Math.round((present / this.users.length) * 100) : 0;
+
+                    grid.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">Total Registered Staff</div>
+                                <div class="text-2xl font-black text-slate-800 dark:text-white mt-1">${this.users.length}</div>
+                                <div class="text-[10px] text-emerald-600 font-bold mt-1">Active Accounts</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="app.filterByShiftCard('Morning')" class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-400 transition-all group">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400 group-hover:text-amber-600 transition-colors">Morning Shift Staff <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i></div>
+                                <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">${morning}</div>
+                                <div class="text-[10px] text-slate-400 mt-1">08:00 AM - 04:00 PM</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-sun"></i>
+                            </div>
+                        </div>
+
+                        <div onclick="app.filterByShiftCard('Evening')" class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-400 transition-all group">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400 group-hover:text-indigo-600 transition-colors">Evening Shift Staff <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-1"></i></div>
+                                <div class="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">${evening}</div>
+                                <div class="text-[10px] text-slate-400 mt-1">04:00 PM - 12:00 AM</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-moon"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">Present Staff Today</div>
+                                <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">${present}</div>
+                                <div class="text-[10px] text-emerald-600 font-bold mt-1">${pct}% Attendance</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-user-check"></i>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const userLogs = this.logs.filter(l => l.userId === this.currentUser.id);
+                    const todayLog = userLogs.find(l => l.date === todayStr);
+
+                    let statusText = "Not Checked In";
+                    let statusColor = "text-slate-400";
+                    if (todayLog) {
+                        if (todayLog.status === 'Checked In') {
+                            statusText = `Active (In at ${todayLog.checkIn})`;
+                            statusColor = "text-emerald-600 dark:text-emerald-400";
+                        } else {
+                            statusText = `Completed (${todayLog.hoursWorked})`;
+                            statusColor = "text-blue-600 dark:text-blue-400";
+                        }
+                    }
+
+                    grid.innerHTML = `
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">My Assigned Shift</div>
+                                <div class="text-xl font-black text-amber-600 dark:text-amber-400 mt-1">${this.currentUser.shift} Shift</div>
+                                <div class="text-[10px] text-slate-400 mt-1">${this.currentUser.shift === 'Morning' ? '08:00 AM - 04:00 PM' : '04:00 PM - 12:00 AM'}</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-business-time"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">Today's Check-in Status</div>
+                                <div class="text-sm font-black ${statusColor} mt-1">${statusText}</div>
+                                <div class="text-[10px] text-slate-400 mt-1">${todayStr}</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-fingerprint"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">Total Shift Logs Recorded</div>
+                                <div class="text-2xl font-black text-brand-600 dark:text-brand-400 mt-1">${userLogs.length} Days</div>
+                                <div class="text-[10px] text-slate-400 mt-1">Personal attendance history</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-semibold text-slate-400">Account Access</div>
+                                <div class="text-base font-black text-emerald-600 dark:text-emerald-400 mt-1">Active & Verified</div>
+                                <div class="text-[10px] text-slate-400 mt-1">ID: ${this.currentUser.id}</div>
+                            </div>
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
+                                <i class="fa-solid fa-id-card"></i>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            renderTimingChart() {
+                const container = document.getElementById('chartBarsContainer');
+                const filterLabel = document.getElementById('graphFilterLabel');
+                if (!container || !this.currentUser) return;
+
+                const isAdmin = this.currentUser.role === 'Administrator';
+                const targetLogs = isAdmin ? this.logs : this.logs.filter(l => l.userId === this.currentUser.id);
+
+                if (filterLabel) {
+                    filterLabel.innerText = isAdmin ? `All Staff (${targetLogs.length})` : `My Records (${targetLogs.length})`;
+                }
+
+                const slots = [
+                    { label: '07AM', count: 0 },
+                    { label: '08AM', count: 0 },
+                    { label: '09AM', count: 0 },
+                    { label: '10AM', count: 0 },
+                    { label: '11AM', count: 0 },
+                    { label: '12PM', count: 0 },
+                    { label: '04PM', count: 0 }
+                ];
+
+                targetLogs.forEach(l => {
+                    const timeStr = l.checkIn;
+                    if (!timeStr || timeStr === '-') return;
+                    
+                    if (timeStr.startsWith('07:')) slots[0].count++;
+                    else if (timeStr.startsWith('08:')) slots[1].count++;
+                    else if (timeStr.startsWith('09:')) slots[2].count++;
+                    else if (timeStr.startsWith('10:')) slots[3].count++;
+                    else if (timeStr.startsWith('11:')) slots[4].count++;
+                    else if (timeStr.startsWith('12:')) slots[5].count++;
+                    else if (timeStr.startsWith('04:')) slots[6].count++;
+                    else slots[1].count++;
+                });
+
+                const maxCount = Math.max(...slots.map(s => s.count), 4);
+
+                container.innerHTML = slots.map(slot => {
+                    const heightPct = Math.max(15, Math.round((slot.count / maxCount) * 100));
+                    return `
+                        <div class="flex flex-col items-center justify-end h-full group">
+                            <span class="text-[9px] font-mono font-bold text-cyan-600 dark:text-cyan-400 mb-0.5 opacity-0 group-hover:opacity-100 transition-opacity">${slot.count}</span>
+                            <div class="w-full max-w-[28px] rounded-t-lg bg-gradient-to-t from-cyan-500 via-blue-600 to-indigo-500 transition-all duration-500 shadow-md group-hover:brightness-125" style="height: ${heightPct}%;"></div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            changeCalendarMonth(direction) {
+                this.calMonth += direction;
+                if (this.calMonth > 11) {
+                    this.calMonth = 0;
+                    this.calYear++;
+                } else if (this.calMonth < 0) {
+                    this.calMonth = 11;
+                    this.calYear--;
+                }
+                this.renderLuxuryCalendar();
+            }
+
+            renderLuxuryCalendar() {
+                const container = document.getElementById('luxuryCalendarDays');
+                const titleEl = document.getElementById('calendarMonthTitle');
+                if (!container || !this.currentUser) return;
+
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                if (titleEl) titleEl.innerText = `${monthNames[this.calMonth]} ${this.calYear}`;
+
+                const targetUserId = this.currentUser.id;
+                const userLogs = this.logs.filter(l => l.userId === targetUserId);
+                
+                const logMap = {};
+                userLogs.forEach(l => {
+                    logMap[l.date] = l;
+                });
+
+                const firstDayIndex = (new Date(this.calYear, this.calMonth, 1).getDay() + 6) % 7;
+                const totalDays = new Date(this.calYear, this.calMonth + 1, 0).getDate();
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                let html = '';
+
+                for (let i = 0; i < firstDayIndex; i++) {
+                    html += `<div class="h-9 rounded-xl bg-transparent"></div>`;
+                }
+
+                for (let day = 1; day <= totalDays; day++) {
+                    const mm = String(this.calMonth + 1).padStart(2, '0');
+                    const dd = String(day).padStart(2, '0');
+                    const dateStr = `${this.calYear}-${mm}-${dd}`;
+                    
+                    const log = logMap[dateStr];
+                    const isToday = dateStr === todayStr;
+
+                    let bgClass = "bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-800";
+                    let tooltip = "No record";
+
+                    if (log) {
+                        if (log.status === 'Completed' || log.status === 'Checked In') {
+                            bgClass = "bg-blue-600 text-white font-bold shadow-md shadow-blue-900/30 ring-2 ring-blue-400/30";
+                            tooltip = `Present: In ${log.checkIn}`;
+                        }
+                    } else {
+                        const dObj = new Date(dateStr);
+                        const nowObj = new Date();
+                        nowObj.setHours(0,0,0,0);
+
+                        if (dObj < nowObj) {
+                            const dayOfWeek = dObj.getDay();
+                            if (dayOfWeek !== 0) {
+                                bgClass = "bg-rose-600/90 text-white font-bold shadow-md shadow-rose-900/30 ring-2 ring-rose-400/30";
+                                tooltip = "Off / Absent";
+                            } else {
+                                bgClass = "bg-slate-200 dark:bg-slate-800 text-slate-400";
+                                tooltip = "Sunday (Weekend Off)";
+                            }
+                        }
+                    }
+
+                    if (isToday) {
+                        bgClass += " ring-2 ring-amber-400";
+                    }
+
+                    html += `
+                        <div title="${tooltip}" class="h-9 rounded-xl flex flex-col items-center justify-center text-xs font-mono transition-all cursor-pointer hover:scale-105 ${bgClass}">
+                            <span>${day}</span>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = html;
+            }
+
+            renderActivityFeed() {
+                const container = document.getElementById('dashActivityContainer');
+                const titleEl = document.getElementById('dashActivityTitle');
+                if (!container || !this.currentUser) return;
+
+                const isAdmin = this.currentUser.role === 'Administrator';
+                if (titleEl) titleEl.innerText = isAdmin ? "Today's Check-in Activity Feed" : "Your Recent Check-in History";
+
+                let relevantLogs = isAdmin 
+                    ? this.logs.slice(-5).reverse()
+                    : this.logs.filter(l => l.userId === this.currentUser.id).slice(-5).reverse();
+
+                if (relevantLogs.length === 0) {
+                    container.innerHTML = `
+                        <div class="py-8 text-center text-xs text-slate-400">
+                            <i class="fa-solid fa-clock text-2xl mb-2 text-slate-300"></i>
+                            <p>No activity recorded yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = relevantLogs.map(log => `
+                    <div class="py-3 flex items-center justify-between text-xs">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 font-bold flex items-center justify-center">
+                                ${log.userName.charAt(0)}
+                            </div>
+                            <div>
+                                <div class="font-bold text-slate-800 dark:text-slate-200">${log.userName} (${log.date})</div>
+                                <div class="text-[10px] text-slate-400">${log.userShift} Shift • ${log.note || 'Regular Check'}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono font-bold text-emerald-600 dark:text-emerald-400">In: ${log.checkIn}</div>
+                            <div class="text-[10px] text-slate-400">Out: ${log.checkOut}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getTodayActiveLog() {
+                if (!this.currentUser) return null;
+                const todayStr = new Date().toISOString().split('T')[0];
+                return this.logs.find(l => l.userId === this.currentUser.id && l.date === todayStr && l.status === 'Checked In');
+            }
+
+            refreshPunchTerminalState() {
+                const activeLog = this.getTodayActiveLog();
+                const btnIn = document.getElementById('btnPunchIn');
+                const btnOut = document.getElementById('btnPunchOut');
+                const indicator = document.getElementById('punchStatusIndicator');
+                const timerDisplay = document.getElementById('punchTimerDisplay');
+
+                if (!btnIn || !btnOut || !indicator || !timerDisplay) return;
+
+                if (activeLog) {
+                    btnIn.disabled = true;
+                    btnIn.className = "py-4 px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-extrabold text-sm cursor-not-allowed transition-all flex items-center justify-center space-x-3";
+                    
+                    btnOut.disabled = false;
+                    btnOut.className = "py-4 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-extrabold text-sm shadow-xl shadow-rose-950/20 transition-all flex items-center justify-center space-x-3 group transform hover:-translate-y-0.5 cursor-pointer";
+
+                    indicator.innerHTML = `
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span class="text-emerald-400">CHECKED IN (${activeLog.checkIn})</span>
+                    `;
+                    timerDisplay.classList.remove('hidden');
+                } else {
+                    btnIn.disabled = false;
+                    btnIn.className = "py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm shadow-xl shadow-emerald-950/20 transition-all flex items-center justify-center space-x-3 group transform hover:-translate-y-0.5 cursor-pointer";
+
+                    btnOut.disabled = true;
+                    btnOut.className = "py-4 px-6 rounded-2xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 font-extrabold text-sm cursor-not-allowed transition-all flex items-center justify-center space-x-3";
+
+                    indicator.innerHTML = `
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                        <span>Not Checked In Today</span>
+                    `;
+                    timerDisplay.classList.add('hidden');
+                }
+            }
+
+            updatePunchTimer() {
+                const activeLog = this.getTodayActiveLog();
+                if (!activeLog) return;
+
+                const timerDisplay = document.getElementById('punchTimerDisplay');
+                if (timerDisplay) {
+                    const checkInTime = new Date(`${activeLog.date} ${activeLog.checkIn}`);
+                    const now = new Date();
+                    const diffMs = Math.max(0, now - checkInTime);
+
+                    const hrs = Math.floor(diffMs / 3600000);
+                    const mins = Math.floor((diffMs % 3600000) / 60000);
+                    const secs = Math.floor((diffMs % 60000) / 1000);
+
+                    timerDisplay.innerText = `Elapsed: ${String(hrs).padStart(2, '0')}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
+                }
+            }
+
+            performPunch(type) {
+                if (!this.currentUser) return;
+                const now = new Date();
+                const todayStr = now.toISOString().split('T')[0];
+                const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit' });
+                const noteInput = document.getElementById('punchNoteInput');
+                const note = noteInput ? noteInput.value.trim() : '';
+
+                if (type === 'in') {
+                    const newLog = {
+                        id: `LOG-${Date.now()}`,
+                        userId: this.currentUser.id,
+                        userName: this.currentUser.name,
+                        userShift: this.currentUser.shift,
+                        date: todayStr,
+                        checkIn: timeStr,
+                        checkOut: '-',
+                        hoursWorked: 'In Progress',
+                        status: 'Checked In',
+                        note: note || 'Terminal Check In'
+                    };
+                    this.logs.unshift(newLog);
+                    this.showToast(`Checked IN successfully at ${timeStr}`);
+                } else {
+                    const activeLog = this.getTodayActiveLog();
+                    if (activeLog) {
+                        activeLog.checkOut = timeStr;
+                        activeLog.status = 'Completed';
+                        if (note) activeLog.note = note;
+
+                        const start = new Date(`${activeLog.date} ${activeLog.checkIn}`);
+                        const end = new Date(`${activeLog.date} ${timeStr}`);
+                        const diffHrs = ((end - start) / 3600000).toFixed(1);
+                        activeLog.hoursWorked = `${diffHrs} hrs`;
+
+                        this.showToast(`Checked OUT successfully at ${timeStr}`);
+                    }
+                }
+
+                if (noteInput) noteInput.value = '';
+                this.saveData();
+                this.updateUserUI();
+                this.renderAllViews();
+            }
+
+            renderPersonalPunchHistory() {
+                const container = document.getElementById('personalPunchHistory');
+                if (!container || !this.currentUser) return;
+
+                const userLogs = this.logs.filter(l => l.userId === this.currentUser.id).slice(0, 5);
+
+                if (userLogs.length === 0) {
+                    container.innerHTML = `<p class="text-slate-400 text-center py-2">No personal check-in logs recorded yet.</p>`;
+                    return;
+                }
+
+                container.innerHTML = userLogs.map(l => `
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex justify-between items-center">
+                        <div>
+                            <div class="font-bold text-slate-800 dark:text-white">${l.date}</div>
+                            <div class="text-[10px] text-slate-400">In: ${l.checkIn} | Out: ${l.checkOut}</div>
+                        </div>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${l.status === 'Checked In' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'}">
+                            ${l.hoursWorked}
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            renderLogsTable() {
+                const tbody = document.getElementById('logsTableBody');
+                if (!tbody || !this.currentUser) return;
+
+                const isAdmin = this.currentUser.role === 'Administrator';
+                const searchInput = document.getElementById('logSearchInput');
+                const shiftFilterEl = document.getElementById('logShiftFilter');
+                const statusFilterEl = document.getElementById('logStatusFilter');
+
+                const search = searchInput ? searchInput.value.toLowerCase() : '';
+                const shiftFilter = shiftFilterEl ? shiftFilterEl.value : 'ALL';
+                const statusFilter = statusFilterEl ? statusFilterEl.value : 'ALL';
+
+                let targetLogs = isAdmin ? this.logs : this.logs.filter(l => l.userId === this.currentUser.id);
+
+                let filtered = targetLogs.filter(log => {
+                    const matchSearch = !isAdmin || log.userName.toLowerCase().includes(search) || log.date.includes(search);
+                    const matchShift = shiftFilter === 'ALL' || log.userShift === shiftFilter;
+                    const matchStatus = statusFilter === 'ALL' || log.status === statusFilter;
+                    return matchSearch && matchShift && matchStatus;
+                });
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8" class="p-8 text-center text-slate-400">
+                                No attendance records found.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = filtered.map(log => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="p-4 font-mono">${log.date}</td>
+                        <td class="p-4">
+                            <div class="font-bold text-slate-800 dark:text-white">${log.userName}</div>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${log.userShift === 'Morning' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'}">
+                                ${log.userShift}
+                            </span>
+                        </td>
+                        <td class="p-4 font-mono text-emerald-600 dark:text-emerald-400">${log.checkIn}</td>
+                        <td class="p-4 font-mono text-slate-500">${log.checkOut}</td>
+                        <td class="p-4 font-semibold">${log.hoursWorked}</td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold ${log.status === 'Checked In' ? 'bg-emerald-500 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}">
+                                ${log.status}
+                            </span>
+                        </td>
+                        <td class="p-4 text-slate-400">${log.note || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+
+            exportLogsToCSV() {
+                const isAdmin = this.currentUser?.role === 'Administrator';
+                const exportData = isAdmin ? this.logs : this.logs.filter(l => l.userId === this.currentUser.id);
+
+                if (exportData.length === 0) {
+                    this.showToast('No logs available to export.', 'error');
+                    return;
+                }
+
+                let csv = 'Log ID,User Name,Shift,Date,Check In,Check Out,Hours Worked,Status,Note\n';
+                exportData.forEach(l => {
+                    csv += `"${l.id}","${l.userName}","${l.userShift}","${l.date}","${l.checkIn}","${l.checkOut}","${l.hoursWorked}","${l.status}","${l.note || ''}"\n`;
+                });
+
+                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Lytics_Attendance_Export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                this.showToast('CSV Export downloaded successfully!');
+            }
+
+            renderUsersTable() {
+                const tbody = document.getElementById('usersTableBody');
+                if (!tbody) return;
+
+                tbody.innerHTML = this.users.map(u => `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="p-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-brand-600 text-white font-black flex items-center justify-center">
+                                    ${u.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-800 dark:text-white">${u.name}</div>
+                                    <div class="text-[10px] text-slate-400">ID: ${u.id}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 font-mono">${u.email}</td>
+                        <td class="p-4 font-mono text-slate-400">
+                            <span class="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">${u.password}</span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-extrabold ${u.shift === 'Morning' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' : 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300'}">
+                                ${u.shift} (${u.shift === 'Morning' ? '8AM-4PM' : '4PM-12AM'})
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <span class="font-bold ${u.role === 'Administrator' ? 'text-brand-600 dark:text-brand-400' : 'text-slate-500'}">
+                                ${u.role}
+                            </span>
+                        </td>
+                        <td class="p-4">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.status === 'Active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'}">
+                                ${u.status}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right space-x-2">
+                            <button onclick="app.openUserModal('${u.id}')" class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 font-bold text-[11px]">
+                                Edit
+                            </button>
+                            ${u.id !== 'USR-101' ? `
+                                <button onclick="app.confirmDeleteUser('${u.id}')" class="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-100 font-bold text-[11px]">
+                                    Delete
+                                </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            openUserModal(userId = null) {
+                const modal = document.getElementById('userModal');
+                const title = document.getElementById('userModalTitle');
+                if (!modal || !title) return;
+                
+                if (userId) {
+                    const found = this.users.find(u => u.id === userId);
+                    if (found) {
+                        title.innerText = "Edit Employee Credentials";
+                        document.getElementById('formUserId').value = found.id;
+                        document.getElementById('formName').value = found.name;
+                        document.getElementById('formEmail').value = found.email;
+                        document.getElementById('formPassword').value = found.password;
+                        document.getElementById('formShift').value = found.shift;
+                        document.getElementById('formRole').value = found.role;
+                        document.getElementById('formStatus').value = found.status;
+                    }
+                } else {
+                    title.innerText = "Add New Employee";
+                    const form = document.getElementById('userForm');
+                    if (form) form.reset();
+                    document.getElementById('formUserId').value = '';
+                }
+
+                modal.classList.remove('hidden');
+            }
+
+            closeUserModal() {
+                const modal = document.getElementById('userModal');
+                if (modal) modal.classList.add('hidden');
+            }
+
+            saveUserForm(e) {
+                e.preventDefault();
+                const id = document.getElementById('formUserId').value;
+                const name = document.getElementById('formName').value.trim();
+                const email = document.getElementById('formEmail').value.trim();
+                const password = document.getElementById('formPassword').value.trim();
+                const shift = document.getElementById('formShift').value;
+                const role = document.getElementById('formRole').value;
+                const status = document.getElementById('formStatus').value;
+
+                if (id) {
+                    const user = this.users.find(u => u.id === id);
+                    if (user) {
+                        user.name = name;
+                        user.email = email;
+                        user.password = password;
+                        user.shift = shift;
+                        user.role = role;
+                        user.status = status;
+                        this.showToast(`Updated credentials for ${name}`);
+                    }
+                } else {
+                    const newUser = {
+                        id: `USR-${Date.now()}`,
+                        name,
+                        email,
+                        password,
+                        shift,
+                        role,
+                        status
+                    };
+                    this.users.push(newUser);
+                    this.showToast(`New employee ${name} created successfully!`);
+                }
+
+                this.saveData();
+                this.closeUserModal();
+                this.renderAllViews();
+            }
+
+            confirmDeleteUser(userId) {
+                const user = this.users.find(u => u.id === userId);
+                if (!user) return;
+
+                const modal = document.getElementById('confirmModal');
+                if (!modal) return;
+
+                document.getElementById('confirmTitle').innerText = `Delete ${user.name}?`;
+                document.getElementById('confirmMessage').innerText = `This will permanently delete ${user.email} from the portal.`;
+
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                const okBtn = document.getElementById('confirmOkBtn');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                };
+
+                cancelBtn.onclick = cleanup;
+                okBtn.onclick = () => {
+                    this.users = this.users.filter(u => u.id !== userId);
+                    this.saveData();
+                    this.renderAllViews();
+                    cleanup();
+                    this.showToast(`Employee account deleted`, 'error');
+                };
+
+                modal.classList.remove('hidden');
+            }
+
+            resetDemoData() {
+                const modal = document.getElementById('confirmModal');
+                if (!modal) return;
+
+                document.getElementById('confirmTitle').innerText = "Reset Demo Data?";
+                document.getElementById('confirmMessage').innerText = "This will restore default users and clear custom logs.";
+
+                const cancelBtn = document.getElementById('confirmCancelBtn');
+                const okBtn = document.getElementById('confirmOkBtn');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                };
+
+                cancelBtn.onclick = cleanup;
+                okBtn.onclick = () => {
+                    localStorage.removeItem('lytics_users');
+                    localStorage.removeItem('lytics_logs');
+                    localStorage.removeItem('lytics_current_user');
+                    this.users = DEFAULT_USERS;
+                    this.logs = DEFAULT_LOGS;
+                    this.currentUser = DEFAULT_USERS[0];
+                    this.saveData();
+                    this.updateUserUI();
+                    this.renderAllViews();
+                    cleanup();
+                    this.showToast('Portal reset to default state!');
+                };
+
+                modal.classList.remove('hidden');
+            }
+        }
+
+        window.app = new LyticsPortal();
+    </script>
+</body>
+</html>
